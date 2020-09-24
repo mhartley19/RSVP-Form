@@ -4,44 +4,51 @@ const fs = require('fs')
 const ejs = require('ejs')
 const path = require('path')
 const multer = require('multer')
-const upload = multer({ dest: 'uploads/' })
 const { v4: uuidv4 } = require('uuid')
 
 
 
-//WHY IN THE $%^() DOES FILENAME NOT WORK AND WTF IS THE BUFFER?????>??
+
+
 
 
 const startServer = () => {
-    const PORT_TO_USE = process.env.PORT || 3000
+
+ 
+    const PORT_TO_USE = process.env.PORT || 4000
+
+    const uploadDirectory = path.resolve(__dirname, 'public/uploads')
+    
+        
     const app = express()
     app.use(express.json())
     app.use(express.urlencoded({ extended: false}))
-    // app.use('/public',express.static(uploadDirectory))
-    
+    app.use(express.static(uploadDirectory))
     const storageEngine = multer.diskStorage({
-        destination: (req, file, callback) =>{
-            callback(null, uploadDirectory)
+        destination: (req, file, cb) =>{
+            cb(null, uploadDirectory)
         },
-        filename: (req, file, callback) => {
-            const fileName = file.fieldname + Date.now() + path.extname(file.originalname)
-            console.log(fileName)
-            callback(null, fileName)
+        filename: (req, file, cb) => {
+
+            cb(null,file.fieldname + uuidv4() + path.extname(file.originalname))
         }
+        
     })
+    
 
-    const uploadDirectory = path.resolve(__dirname, 'public/uploads')
-
-    console.log(`The directory is ${uploadDirectory}`)
-
-
-    console.log(storageEngine)
   
-   const uploader = multer({ storageEngine })
+
+  
+
+
+    
+  
+   const uploader = multer({ storage: storageEngine })
     
 
     app.get('/', (req,res)=>{
         const path = './public/upload';
+        console.log(path)
         fs.readdir(path, function(err, items) {
         
         res.send(`
@@ -70,9 +77,6 @@ const startServer = () => {
                             </body>
                             </html>
         
-        
-       
-        
         `)
         })
     })
@@ -81,7 +85,7 @@ const startServer = () => {
     app.post('/upload', uploader.single('myImage'), function (req,res, next) {
         console.log("hello")
         res.send(req.file)
-        console.log(req.file)
+        
     })
        
  
@@ -104,46 +108,3 @@ process.on('unhandledRejection', (reason, rejectedPromise) => {
 
 
 
-
-
-
-
-
-
-// ;
-// fs.readdir('public/uploads', function(err, items) {
-//     console.log(items);
-//     ;
-// });
-
-// app.get('/upload',(req,res)=>{
-//     res.send
-// })
-
-
-
-// app.post('/upload', (req,res) => {
-//     fileUpload(req, res, (err) => {
-//         if(err){
-//             res.render('index',{
-//                 err:"Error"
-//             })
-
-//          }
-//               else{
-//                   res.render('index')
-//                   res.send(`public/uploads/${req.file.filename}`)    
-//               } 
-//              })
-//             })
-         
-
-
-
-
-// app.set('view engine', 'ejs')
-
-
-
-
-//app.put(/uploads/:picsID)
