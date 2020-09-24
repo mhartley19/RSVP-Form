@@ -4,26 +4,51 @@ const fs = require('fs')
 const ejs = require('ejs')
 const path = require('path')
 const multer = require('multer')
+const upload = multer({ dest: 'uploads/' })
+const { v4: uuidv4 } = require('uuid')
+
 
 
 
 
 
 const startServer = () => {
-    const PORT_TO_USE = process.env.PORT || 3000
+    const PORT_TO_USE = process.env.PORT || 4000
     const app = express()
     app.use(express.static('./public'))
     app.use(express.json())
     app.use(express.urlencoded({ extended: false}))
+    
+    
+
+    const uploadDirectory = path.resolve(__dirname, "public/uploads")
+
+    console.log(`The directory is ${uploadDirectory}`)
+
+    const storageEngine = multer.diskStorage({
+        destination: (req, file, callback) =>{
+            callback(null, uploadDirectory)
+        },
+        filename: function(req, file, callback){
+            const fileName =`${uuidv4}${path.extname(file.originalname)}`
+            callback(null, fileName)
+        }
+    })
+
+   const uploader = multer({ storageEngine })
+    
 
     app.get('/', (req,res)=>{
+        const path = './public/uploads';
+        fs.readdir(path, function(err, items) {
+        
         res.send(`<h1>Welcome to Kenziegram!</h1>
     
         <form action="/upload" method="POST" enctype="multipart/form-data">
             <div class="file-field input-field">
               <div class="btn">
                 <span>File</span>
-                <input type="file" name="myFile">
+                <input type="file" name="myImage">
               </div>
               <div class="file-path-wrapper">
                 <input class="file-path validate" type="text">
@@ -33,19 +58,16 @@ const startServer = () => {
           </form>
         
         `)
-    })
-
-    app.get('/upload',(req, res) =>{
-        res.send("Working")
-    })    
-    app.post('/upload',(req,res) => {
-       if(!req.body){
-           return 
-       }
-        
-
         })
+    })
     
+      
+    app.post('/upload', uploader.single('myImage'), function (req,res, next) {
+        console.log("hello")
+        res.send(req.file)
+    })
+       
+         
     
     app.listen(PORT_TO_USE, () => console.log(`Server loaded on port ${PORT_TO_USE}`))
 }
@@ -64,16 +86,8 @@ process.on('unhandledRejection', (reason, rejectedPromise) => {
 
 
 
-// const storageEngine = multer.diskStorage({
-//     destination: './public/uploads',
-//     filename: function(req, file, callback){
-//         callback(null, file.fieldname.jpg)
-//     }
-// })
 
-// const fileUpload = multer({
-//     storage:storageEngine
-// }).single('myFile')
+
 
 
 
