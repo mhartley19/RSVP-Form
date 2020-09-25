@@ -8,14 +8,12 @@ const { v4: uuidv4 } = require('uuid')
 
 
 
-
-
-
-
 const startServer = () => {
-
+    const images = []
+    console.log(images)
  
-    const PORT_TO_USE = process.env.PORT || 4000
+    const PORT_TO_USE = process.env.PORT || 3000
+
 
     const uploadDirectory = path.resolve(__dirname, 'public/uploads')
     
@@ -30,29 +28,24 @@ const startServer = () => {
         },
         filename: (req, file, cb) => {
 
-            cb(null,file.fieldname + uuidv4() + path.extname(file.originalname))
+            cb(null, uuidv4() + path.extname(file.originalname))
         }
         
-    })
-    
-
-  
-
-  
-
-
-    
-  
+    })    
    const uploader = multer({ storage: storageEngine })
     
 
     app.get('/', (req,res)=>{
-        const path = './public/upload';
+        const path = `${uploadDirectory}`;
         console.log(path)
-        fs.readdir(path, function(err, items) {
         
+        fs.readdir(path, function(err, items) {
+        let imageTags = []
+        
+        items.forEach(item => imageTags.push(`<img width="300px" height="250px" src="${item}"/>`))
+        let newImageTags = imageTags.join(' ')
         res.send(`
-        <!DOCTYPE html>
+        <!DOCTYPE html
                 <html lang="en">
                         <head>
                     <meta charset="UTF-8">
@@ -61,7 +54,6 @@ const startServer = () => {
                         </head>
                             <body>
                             <h1>Welcome to Kenziegram!</h1>
-    
                             <form action="/upload" method="POST" enctype="multipart/form-data">
                                 <div class="file-field input-field">
                                   <div class="btn">
@@ -73,22 +65,27 @@ const startServer = () => {
                                   </div>
                                 </div>
                                 <button type="submit" class="btn">Submit</button>
+                               
+                                
                               </form>
-                            </body>
+                            ${newImageTags}
+                            </body
                             </html>
         
         `)
         })
     })
+  
     
-      
+    
     app.post('/upload', uploader.single('myImage'), function (req,res, next) {
-        console.log("hello")
         res.send(req.file)
+        images.push(req.file)
+        return
         
     })
        
- 
+
     
     app.listen(PORT_TO_USE, () => console.log(`Server loaded on port ${PORT_TO_USE}`))
 }
